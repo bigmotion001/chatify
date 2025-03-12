@@ -1,0 +1,125 @@
+import { generateToken } from "../lib/generateToken.js";
+import User from "../models/user.model.js";
+import bcryptjs from "bcryptjs";
+
+export const signup = async (req, res) => {
+  const { name, email, password } = req.body;
+  try {
+    //check if input is empty
+    if (!name || !email || !password) {
+      return res
+        .status(400)
+        .json({ success: false, message: "All filed are required" });
+    }
+    //check if email is a valid email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid email format" });
+    }
+    //check if email already exists
+    const userExists = await User.findOne({ email });
+    if (userExists) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Email already exists" });
+    }
+    //check if password is at least 6 characters long
+    if (password.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: "Password must be at least 6 characters long",
+      });
+    }
+    //hash password
+    const salt = await bcryptjs.genSalt(10); // 10 rounds of hashing
+    const hashedPassword = await bcryptjs.hash(password, salt);
+    //create a user
+    const newUser = new User({
+      name,
+      email,
+      password: hashedPassword,
+    });
+    if (newUser) {
+      //generate token
+      generateToken(newUser._id, res);
+      //save user
+      await newUser.save();
+      return res.status(201).json({
+        success: true,
+        message: "User Registered successfully",
+        user: {
+          ...newUser._doc,
+          password: undefined,
+        },
+      });
+    } else {
+      return res
+        .status(401)
+        .json({ success: false, message: "unable to create a user" });
+    }
+  } catch (error) {
+    console.log("error in registering user controller", error);
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal Server Error" });
+  }
+};
+export const login = async (req, res) => {
+  const { email, password } = req.body;
+
+  try {
+    //check if filed is empty
+    if (!email || !password)
+      return res
+        .status(401)
+        .json({ success: false, message: "all filed are required" });
+    //check if email is a valid email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid email format" });
+    }
+    //check if user exist
+    const user = await User.findOne({ email });
+    if (!user) return res.status(401).json({ message: "User not found" });
+
+    //check if password match
+    const isValidPassword = await bcryptjs.compare(password, user.password);
+    if (!isValidPassword)
+      return res
+        .status(401)
+        .json({ success: false, message: "Invalid Password" });
+
+    //generate token and set cookie
+    generateToken(user._id, res);
+    //send user details
+    return res.status(200).json({
+      success: true,
+      message: "User logged in successfully",
+      user: {
+        ...user._doc,
+        password: undefined,
+      },
+    });
+  } catch (error) {
+    console.log("error in login user controller", error);
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal Server Error" });
+  }
+};
+
+export const logout = async (req, res) => {
+  try {
+    res.clearCookie("token");
+    res.status(200).json({ success: true, message: "Logged out successfully" });
+  } catch (error) {
+    console.log("error in logout user controller", error);
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal Server Error" });
+  }
+};
