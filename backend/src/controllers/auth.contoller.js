@@ -1,6 +1,7 @@
 import { generateToken } from "../lib/generateToken.js";
 import User from "../models/user.model.js";
 import bcryptjs from "bcryptjs";
+import  cloudinary from "../lib/cloudinary.js";
 
 export const signup = async (req, res) => {
   const { name, email, password } = req.body;
@@ -123,3 +124,57 @@ export const logout = async (req, res) => {
       .json({ success: false, message: "Internal Server Error" });
   }
 };
+
+export const updateProfile = async (req, res) =>{
+    const {profilePic} = req.body;
+
+    try {
+     
+      if(!profilePic) return res.status(401).json({success: false, message: "Profile picture is required"});
+      //find user
+      const user = await User.findById(req.userId).select("-password");
+      if(!user)return res.status(400).json({success:false, message: "User not found"});
+
+      //upload to cloudinary
+   //if user already has a profile image, delete the previous one from cloudinary
+   if (user.profilePic) {
+                  
+    await cloudinary.uploader.destroy(user.profilePic.split("/").pop().split(".")[0]);
+}
+//upload the profile image to cloudinary
+const uploadedProfilePic = await cloudinary.uploader.upload(profilePic);
+profilePic = uploadedProfilePic.secure_url;
+
+//update user profile
+const updatedUser = await User.findByIdAndUpdate(req.userId, {profilePic: profilePic});
+
+res.status(200).json({message: "Profile picture updated successfully", updatedUser});
+
+        
+    } catch (error) {
+        console.log("error in update profile user controller", error);
+        return res
+          .status(500)
+          .json({ success: false, message: "Internal Server Error" });
+        
+    }
+}
+
+export const getUser = async(req, res) =>{
+
+  try{
+    //get user 
+    const user = await User.findById(req.userId).select("-password");
+    //check if user exist
+    if(!user)return res.status(400).json({success: false, message: "User not found"});
+
+    res.status(200).json({success:true, user});
+
+  }catch(error){
+    console.log("error in getting  user controller", error);
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal Server Error" });
+  }
+
+}
