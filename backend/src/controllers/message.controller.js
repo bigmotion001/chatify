@@ -26,7 +26,7 @@ export const getUsersForSideBar = async(req, res)=>{
 export const getMessages = async(req, res) =>{
     try {
         //our receiver id
-        const {id: userToChatId} = req.params.id;
+        const {id: userToChatId} = req.params;
         const senderId = req.userId;
 
         //find messages
@@ -52,7 +52,7 @@ export const sendMessage = async(req, res)=>{
     try {
         const {text, image} = req.body;
         //receiver id
-        const {id: receiverId} = req.params.id;
+        const {id: receiverId} = req.params;
         //check if receiver id exist
         const receiver = await User.findById(receiverId);
         if(!receiver)return res.status(400).json({success:false, message: "Invalid Receiver Id"});
