@@ -8,6 +8,7 @@ import SettingsPage from "./pages/SettingsPage"
 import { useAuthStore } from "./store/useAuthStore";
 import { useEffect } from "react";
 import Loader from "./lib/Loaders";
+import { Toaster } from "react-hot-toast";
 
 
 
@@ -38,6 +39,7 @@ if(isCheckingAuth && !authUser) return (
          <Route  path="/profile" element={authUser?<ProfilePage />: <Navigate to="/login"/>}  />
          <Route  path="/settings" element={authUser?<SettingsPage />: <Navigate to="/login"/>}  />
       </Routes>
+      <Toaster />
     </div>
   )
 }
