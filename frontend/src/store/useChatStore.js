@@ -4,12 +4,13 @@ import { axiosInstance } from "../lib/axios";
 
 
 
-export const useChatStore = create((set) => ({
+export const useChatStore = create((set, get) => ({
     messages: [],
   users: [],
   selectedUser: null,
   isUsersLoading: false,
   isMessagesLoading: false,
+  isLoading: false,
 
 
 
@@ -46,8 +47,30 @@ getMessages: async(userId)=>{
     }
 },
 
+//send message
+sendMessage: async(messageData)=>{
+    const {selectedUser, messages} = get();
+    set({isLoading: true});
+    try{
+  const res =  await axiosInstance.post(`/message/send/${selectedUser._id}`, messageData);
+  set({messages:[...messages, res.data]})
+    }catch(e){
+        console.log("error in getting messages", e);
+        toast.error(e.response.data.message);  
+    }finally{
+        set({isLoading: false});
+    }
+},
+
+
+
+
+
+
 //set selected user
-setSelectedUser: async(selectedUser)=> set({selectedUser})
+setSelectedUser: async(selectedUser)=> set({selectedUser}),
+
+
 
 
 }));
