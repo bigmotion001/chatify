@@ -7,7 +7,7 @@ import { verifyToken } from "../middlewares/verifyToken.js";
 router.post("/signup", signup);
 router.post("/login", login);
 router.post("/logout", logout);
-router.post("/update-profile", verifyToken, updateProfile);
+router.put("/update-profile", verifyToken, updateProfile);
 router.get("/check", verifyToken, getUser);
 
 export default router;

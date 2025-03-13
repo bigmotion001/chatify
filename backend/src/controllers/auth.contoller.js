@@ -126,7 +126,7 @@ export const logout = async (req, res) => {
 };
 
 export const updateProfile = async (req, res) =>{
-    const {profilePic} = req.body;
+    let {profilePic} = req.body;
 
     try {
      
@@ -142,20 +142,20 @@ export const updateProfile = async (req, res) =>{
     await cloudinary.uploader.destroy(user.profilePic.split("/").pop().split(".")[0]);
 }
 //upload the profile image to cloudinary
-const uploadedProfilePic = await cloudinary.uploader.upload(profilePic);
+let uploadedProfilePic = await cloudinary.uploader.upload(profilePic);
 profilePic = uploadedProfilePic.secure_url;
 
 //update user profile
 const updatedUser = await User.findByIdAndUpdate(req.userId, {profilePic: profilePic});
 
-res.status(200).json({message: "Profile picture updated successfully", updatedUser});
+res.status(200).json(updatedUser);
 
         
     } catch (error) {
         console.log("error in update profile user controller", error);
         return res
           .status(500)
-          .json({ success: false, message: "Internal Server Error" });
+          .json({ success: false, message: "Something went wrong" });
         
     }
 }
