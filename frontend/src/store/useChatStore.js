@@ -72,6 +72,7 @@ subscribeToMessages: ()=>{
 
 
     socket.on("newMessage", (newMessage)=>{
+        if(newMessage.userId !== selectedUser._id) return;
         set({messages: [...get().messages, newMessage]});
 
     })
